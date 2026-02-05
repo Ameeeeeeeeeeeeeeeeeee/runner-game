@@ -172,6 +172,78 @@ class ParticleSystem {
 }
 
 // ============================================
+// FLOATING TEXT SYSTEM
+// ============================================
+class FloatingText {
+    constructor(x, y, text, color) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.life = 1.0;
+        this.velocityY = -2;
+    }
+
+    update() {
+        this.y += this.velocityY;
+        this.life -= 0.02;
+    }
+
+    draw(ctx) {
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.font = "bold 20px " + "var(--font-display)";
+        ctx.fillStyle = this.color;
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 2;
+        ctx.strokeText(this.text, this.x, this.y);
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.globalAlpha = 1;
+    }
+}
+
+// ============================================
+// COIN CLASS
+// ============================================
+class Coin {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 30;
+        this.height = 30;
+        this.collected = false;
+        this.rotation = 0;
+    }
+
+    update(gameSpeed) {
+        this.x -= gameSpeed;
+        this.rotation += 0.1;
+    }
+
+    draw(ctx) {
+        if (this.collected) return;
+        
+        ctx.save();
+        ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        ctx.rotate(this.rotation);
+        
+        ctx.shadowColor = "#FFFF00";
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = "#FFD700";
+        ctx.beginPath();
+        ctx.rect(-10, -10, 20, 20);
+        ctx.fill();
+        
+        // Inner detail
+        ctx.fillStyle = "#FFF";
+        ctx.beginPath();
+        ctx.rect(-4, -4, 8, 8);
+        ctx.fill();
+        
+        ctx.restore();
+    }
+}
+
+// ============================================
 // PARALLAX BACKGROUND
 // ============================================
 class ParallaxLayer {
@@ -478,6 +550,11 @@ class SoundManager {
     playDoubleJump() {
         this.playTone(600, 'sawtooth', 0.1);
         this.playTone(900, 'sawtooth', 0.1, 0.05);
+    }
+
+    playCoin() {
+        this.playTone(1500, 'sine', 0.08); // High coin ping
+        this.playTone(2500, 'sine', 0.1, 0.05);
     }
 
     playSlide() {
@@ -951,6 +1028,7 @@ class ObstacleManager {
   reset() {
     this.obstacles = [];
     this.powerUps = [];
+    this.coins = [];
     this.nextObstacleX = this.canvasWidth + 200;
     this.difficulty = 1;
   }
@@ -968,6 +1046,10 @@ class ObstacleManager {
     this.powerUps = this.powerUps.filter(
       (pu) => !pu.isOffScreen() && !pu.collected,
     );
+
+    // Update coins
+    this.coins.forEach((c) => c.update(gameSpeed));
+    this.coins = this.coins.filter((c) => c.x + c.width > 0 && !c.collected);
 
     // Spawn new obstacles
     this.nextObstacleX -= gameSpeed;
@@ -1012,7 +1094,13 @@ class ObstacleManager {
       300,
       CONFIG.MAX_OBSTACLE_GAP - this.difficulty * 50,
     );
-    this.nextObstacleX = this.canvasWidth + Utils.random(minGap, maxGap);
+    const gap = Utils.random(minGap, maxGap);
+    this.nextObstacleX = this.canvasWidth + gap;
+
+    // Spawn Coins in the gap!
+    if (gap > 350 && Math.random() < 0.7) {
+        this.spawnCoinPattern(this.canvasWidth + 100, gap - 100);
+    }
   }
 
   spawnPowerUp() {
@@ -1026,13 +1114,52 @@ class ObstacleManager {
     this.powerUps.push(new PowerUp(x, type, this.groundY));
   }
 
+  spawnCoinPattern(startX, availableWidth) {
+      // Simple line of coins or arc
+      const pattern = Math.random() > 0.5 ? 'line' : 'arc';
+      const coinCount = Math.min(5, Math.floor(availableWidth / 50));
+      
+      for(let i=0; i<coinCount; i++) {
+          let x = startX + i * 50;
+          let y = this.groundY - 50; // Ground level default
+          
+          if (pattern === 'arc') {
+              // Parabola arc for jumping
+               y = this.groundY - 50 - Math.sin((i / (coinCount-1 || 1)) * Math.PI) * 150;
+          }
+          
+          this.coins.push(new Coin(x, y));
+      }
+  }
+
   draw(ctx) {
     this.obstacles.forEach((obs) => obs.draw(ctx));
     this.powerUps.forEach((pu) => pu.draw(ctx));
+    this.coins.forEach((c) => c.draw(ctx));
   }
 
   checkCollisions(player, particles) {
     const playerBox = player.getCollisionBox();
+
+    // Check Coin Collisions
+    for (let i = this.coins.length - 1; i >= 0; i--) {
+        const coin = this.coins[i];
+        if (coin.collected) continue;
+        
+        // Simple circle/box collision
+        if (player.x < coin.x + coin.width &&
+            player.x + player.width > coin.x &&
+            player.y < coin.y + coin.height &&
+            player.y + player.height > coin.y) {
+                
+                coin.collected = true;
+                player.game.sound.playCoin();
+                player.game.score += 50; // Bonus score
+                player.game.floatingTexts.push(
+                    new FloatingText(coin.x, coin.y, "+50", "#FFFF00")
+                );
+            }
+    }
 
     // Check obstacle collisions
     for (const obstacle of this.obstacles) {
@@ -1073,10 +1200,13 @@ class ObstacleManager {
         player.game.sound.playCollect();
         if (powerUp.type === "shield") {
           player.activateShield();
+          player.game.floatingTexts.push(new FloatingText(player.x, player.y, "SHIELD!", CONFIG.COLORS.powerupShield));
         } else if (powerUp.type === "doubleJump") {
           player.activateDoubleJump();
+          player.game.floatingTexts.push(new FloatingText(player.x, player.y, "DBL JUMP!", CONFIG.COLORS.powerupDoubleJump));
         } else {
             player.activateMultiplier();
+            player.game.floatingTexts.push(new FloatingText(player.x, player.y, "2X SCORE!", CONFIG.COLORS.powerupMultiplier));
         }
         particles.emit(
           powerUp.x + powerUp.width / 2,
@@ -1298,6 +1428,7 @@ class Game {
     this.player.reset(this); // Pass game reference
     this.obstacleManager = new ObstacleManager(this.groundY, this.canvas.width);
     this.particles = new ParticleSystem();
+    this.floatingTexts = []; // Initialize floating texts
     this.ui = new UIManager();
     this.inputHandler = new InputHandler(this);
 
@@ -1461,6 +1592,10 @@ class Game {
     this.obstacleManager.update(this.gameSpeed, this.score, this.level);
     this.particles.update();
 
+    // Update floating texts
+    this.floatingTexts.forEach(ft => ft.update());
+    this.floatingTexts = this.floatingTexts.filter(ft => ft.life > 0);
+
     // Check collisions
     if (this.obstacleManager.checkCollisions(this.player, this.particles)) {
       this.gameOver();
@@ -1502,6 +1637,9 @@ class Game {
     this.obstacleManager.draw(this.ctx);
     this.player.draw(this.ctx);
     this.particles.draw(this.ctx);
+
+    // Draw floating texts
+    this.floatingTexts.forEach(ft => ft.draw(this.ctx));
   }
 
   gameLoop(currentTime) {
