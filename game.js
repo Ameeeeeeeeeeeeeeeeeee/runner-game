@@ -1414,6 +1414,7 @@ class Game {
     this.gameSpeed = CONFIG.INITIAL_SPEED;
     this.level = 1;
     this.nextLevelScore = CONFIG.LEVEL_DURATION;
+    this.musicStarted = false;
 
     // Set canvas size
     this.resizeCanvas();
@@ -1506,6 +1507,12 @@ class Game {
     this.background.reset();
     this.background.init(this.canvas.width, this.canvas.height);
     this.ui.showScreen("playing");
+    
+    // Start Music
+    if (window.ytPlayer && window.ytPlayer.playVideo) {
+        window.ytPlayer.playVideo();
+        window.ytPlayer.setVolume(50); // Set to moderate volume
+    }
   }
 
   restartGame() {
@@ -1520,6 +1527,12 @@ class Game {
       this.state = GameState.PLAYING;
       this.ui.showScreen("playing");
       this.lastTime = performance.now();
+    }
+    
+    // Music Pause/Play
+    if (window.ytPlayer && window.ytPlayer.pauseVideo) {
+        if (this.state === GameState.PAUSED) window.ytPlayer.pauseVideo();
+        else if (this.state === GameState.PLAYING) window.ytPlayer.playVideo();
     }
   }
 
@@ -1540,6 +1553,11 @@ class Game {
     if (isNewRecord) {
       this.highScore = Math.floor(this.score);
       Storage.setHighScore(this.highScore);
+    }
+    
+    // Stop music on game over
+    if (window.ytPlayer && window.ytPlayer.pauseVideo) {
+        window.ytPlayer.pauseVideo();
     }
 
     this.ui.showGameOver(this.score, this.highScore, isNewRecord);
@@ -1661,5 +1679,27 @@ class Game {
 // INITIALIZE GAME
 // ============================================
 document.addEventListener("DOMContentLoaded", () => {
-  new Game();
+  window.game = new Game();
 });
+
+// ============================================
+// YOUTUBE MUSIC CONTROLLER
+// ============================================
+window.onYouTubeIframeAPIReady = function() {
+    window.ytPlayer = new YT.Player('music-player', {
+        height: '0',
+        width: '0',
+        videoId: 'ajGrkFL92rk', // The ID from your link
+        playerVars: {
+            'autoplay': 0,
+            'controls': 0,
+            'loop': 1,
+            'playlist': 'ajGrkFL92rk' // Required for looping
+        },
+        events: {
+            'onReady': (event) => {
+                console.log("Music Player Ready");
+            }
+        }
+    });
+};
