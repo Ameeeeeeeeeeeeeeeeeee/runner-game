@@ -1314,6 +1314,7 @@ class UIManager {
     this.gameoverScreen = document.getElementById("gameover-screen");
     this.hud = document.getElementById("hud");
     this.pauseBtn = document.getElementById("pause-btn");
+    this.reviveBtn = document.getElementById("revive-btn");
 
     // Score displays
     this.currentScoreEl = document.getElementById("current-score");
@@ -1386,7 +1387,7 @@ class UIManager {
     }, 500);
   }
 
-  showGameOver(score, highScore, isNewRecord) {
+  showGameOver(score, highScore, isNewRecord, canRevive) {
     this.finalScoreEl.textContent = Math.floor(score);
     this.finalHighScoreEl.textContent = Math.floor(highScore);
 
@@ -1394,6 +1395,12 @@ class UIManager {
       this.newRecordEl.classList.remove("hidden");
     } else {
       this.newRecordEl.classList.add("hidden");
+    }
+
+    if (canRevive) {
+      this.reviveBtn.classList.remove("hidden");
+    } else {
+      this.reviveBtn.classList.add("hidden");
     }
 
     this.showScreen("gameover");
@@ -1415,6 +1422,7 @@ class Game {
     this.level = 1;
     this.nextLevelScore = CONFIG.LEVEL_DURATION;
     this.musicStarted = false;
+    this.revivalUsed = false;
 
     // Set canvas size
     this.resizeCanvas();
@@ -1491,6 +1499,9 @@ class Game {
     document
       .getElementById("pause-btn")
       .addEventListener("click", () => this.togglePause());
+    document
+      .getElementById("revive-btn")
+      .addEventListener("click", () => this.revivePlayer());
   }
 
   startGame(speed) {
@@ -1507,6 +1518,7 @@ class Game {
     this.background.reset();
     this.background.init(this.canvas.width, this.canvas.height);
     this.ui.showScreen("playing");
+    this.revivalUsed = false; // Reset revival on new game
     
     // Start Music
     const music = document.getElementById("bg-music");
@@ -1564,7 +1576,25 @@ class Game {
         music.pause();
     }
 
-    this.ui.showGameOver(this.score, this.highScore, isNewRecord);
+    const canRevive = this.score >= 5000 && !this.revivalUsed;
+    this.ui.showGameOver(this.score, this.highScore, isNewRecord, canRevive);
+  }
+
+  revivePlayer() {
+    this.revivalUsed = true;
+    this.state = GameState.PLAYING;
+    this.player.y = this.groundY - CONFIG.PLAYER_HEIGHT;
+    this.player.velocityY = 0;
+    this.player.activateShield(); // Protection for 5s
+    this.obstacleManager.obstacles = []; // Clear current obstacles
+    
+    this.ui.showScreen("playing");
+
+    // Resume music
+    const music = document.getElementById("bg-music");
+    if (music) {
+        music.play().catch(e => {});
+    }
   }
 
   playerJump() {
