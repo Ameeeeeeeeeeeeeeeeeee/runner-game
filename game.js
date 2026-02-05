@@ -199,19 +199,35 @@ class ParallaxLayer {
           twinkle: Utils.random(0, Math.PI * 2),
         });
       }
-    } else if (this.pattern === "buildings") {
-      let x = 0;
-      while (x < canvasWidth + 200) {
-        const width = Utils.randomInt(40, 100);
-        const height = Utils.randomInt(50, 200);
-        this.elements.push({
-          x: x,
-          width: width,
-          height: height,
-          windows: this.generateWindows(width, height),
-        });
-        x += width + Utils.randomInt(10, 30);
-      }
+    } else if (this.pattern === "addis") {
+        let x = 0;
+        // Generate skylines with specific landmarks
+        while (x < canvasWidth + 300) {
+            const isLandmark = Math.random() < 0.3; // 30% chance of landmark
+            if (isLandmark) {
+                // Determine which landmark
+                const type = Math.random() < 0.5 ? 'cbe' : 'au';
+                if (type === 'cbe') {
+                     this.elements.push({ x: x, type: 'cbe', width: 60, height: 250 });
+                     x += 100;
+                } else {
+                     this.elements.push({ x: x, type: 'au', width: 80, height: 120 });
+                     x += 120;
+                }
+            } else {
+                // Filler buildings
+                const width = Utils.randomInt(30, 60);
+                const height = Utils.randomInt(50, 150);
+                this.elements.push({
+                    x: x,
+                    type: 'normal',
+                    width: width,
+                    height: height,
+                    windows: this.generateWindows(width, height),
+                });
+                x += width + Utils.randomInt(5, 20);
+            }
+        }
     } else if (this.pattern === "mountains") {
       let x = 0;
       while (x < canvasWidth + 300) {
@@ -275,28 +291,52 @@ class ParallaxLayer {
         ctx.closePath();
         ctx.fill();
       });
-    } else if (this.pattern === "buildings") {
+    } else if (this.pattern === "addis") {
       this.elements.forEach((building) => {
-        const x = ((building.x - this.offset) % (canvasWidth + 200)) - 100;
+        const x = ((building.x - this.offset) % (canvasWidth + 300)) - 100;
+        const groundY = canvasHeight - 60;
 
-        // Building body
         ctx.fillStyle = this.color;
-        ctx.fillRect(
-          x,
-          groundY - building.height,
-          building.width,
-          building.height,
-        );
+        
+        if (building.type === 'cbe') {
+            // Commercial Bank of Ethiopia (Diamond/Tapered)
+            ctx.beginPath();
+            ctx.moveTo(x, groundY);
+            ctx.lineTo(x, groundY - building.height * 0.7);
+            ctx.lineTo(x + building.width / 2, groundY - building.height);
+            ctx.lineTo(x + building.width, groundY - building.height * 0.7);
+            ctx.lineTo(x + building.width, groundY);
+            ctx.fill();
+            
+            // Glass effect lines
+            ctx.strokeStyle = "rgba(100, 200, 255, 0.3)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x + building.width/2, groundY - building.height);
+            ctx.lineTo(x + building.width/2, groundY);
+            ctx.stroke();
 
-        // Windows
-        building.windows.forEach((win) => {
-          const winX = x + 5 + win.col * 15;
-          const winY = groundY - building.height + 10 + win.row * 20;
-          ctx.fillStyle = win.lit
-            ? "rgba(255, 200, 100, 0.8)"
-            : "rgba(50, 50, 80, 0.5)";
-          ctx.fillRect(winX, winY, 8, 12);
-        });
+        } else if (building.type === 'au') {
+            // African Union (Main Tower cylinder)
+            ctx.fillRect(x, groundY - building.height, building.width, building.height);
+            // Dome/Top
+            ctx.beginPath();
+            ctx.arc(x + building.width/2, groundY - building.height, building.width/2, Math.PI, 0);
+            ctx.fill();
+            
+        } else {
+            // Normal building
+            ctx.fillRect(x, groundY - building.height, building.width, building.height);
+            // Windows
+            building.windows.forEach((win) => {
+              const winX = x + 5 + win.col * 15;
+              const winY = groundY - building.height + 10 + win.row * 20;
+              ctx.fillStyle = win.lit
+                ? "rgba(255, 200, 100, 0.8)"
+                : "rgba(50, 50, 80, 0.5)";
+              ctx.fillRect(winX, winY, 8, 12);
+            });
+        }
       });
     } else if (this.pattern === "grid") {
       // Neon grid floor
@@ -332,8 +372,8 @@ class Background {
   constructor() {
     this.layers = [
       new ParallaxLayer(0.1, "transparent", 0, 0, "stars"),
-      new ParallaxLayer(0.2, "#0a0a15", 150, 0, "mountains"),
-      new ParallaxLayer(0.4, "#0f0f20", 200, 0, "buildings"),
+      new ParallaxLayer(0.2, "#2a2a15", 250, 0, "mountains"), // Higher, brownish mountains (Entoto)
+      new ParallaxLayer(0.4, "#0f0f20", 200, 0, "addis"), // Addis pattern
       new ParallaxLayer(1, "transparent", 0, 0, "grid"),
     ];
   }
