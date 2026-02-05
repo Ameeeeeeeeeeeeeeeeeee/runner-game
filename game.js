@@ -1509,7 +1509,8 @@ class Game {
     this.ui.showScreen("playing");
     
     // Start Music
-    if (window.ytPlayer && window.ytPlayer.playVideo) {
+    if (window.ytPlayer && window.ytPlayer.playVideo && window.ytPlayer.seekTo) {
+        window.ytPlayer.seekTo(20); // Start from 20 seconds
         window.ytPlayer.playVideo();
         window.ytPlayer.setVolume(50); // Set to moderate volume
     }
@@ -1694,7 +1695,10 @@ window.onYouTubeIframeAPIReady = function() {
             'autoplay': 0,
             'controls': 0,
             'loop': 1,
-            'playlist': 'ajGrkFL92rk' // Required for looping
+            'playlist': 'ajGrkFL92rk', // Required for looping
+            'start': 20, // Start time in seconds
+            'enablejsapi': 1,
+            'origin': window.location.origin
         },
         events: {
             'onReady': (event) => {
