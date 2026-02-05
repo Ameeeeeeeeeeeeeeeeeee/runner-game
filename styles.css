@@ -1,0 +1,387 @@
+/* NEON RUNNER - Endless Runner Game Styles */
+
+:root {
+  --color-bg-dark: #0a0a0f;
+  --color-bg-medium: #12121a;
+  --color-primary: #00f0ff;
+  --color-primary-glow: rgba(0, 240, 255, 0.5);
+  --color-secondary: #ff00aa;
+  --color-accent: #7b2dff;
+  --color-success: #00ff88;
+  --color-warning: #ffaa00;
+  --color-text: #ffffff;
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --font-display: "Orbitron", sans-serif;
+  --font-body: "Rajdhani", sans-serif;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --glow-primary:
+    0 0 10px var(--color-primary), 0 0 20px var(--color-primary-glow);
+}
+
+@keyframes neonPulse {
+    0% { box-shadow: 0 0 5px var(--color-primary), 0 0 10px var(--color-primary); }
+    50% { box-shadow: 0 0 10px var(--color-primary), 0 0 20px var(--color-primary), 0 0 40px var(--color-primary-glow); }
+    100% { box-shadow: 0 0 5px var(--color-primary), 0 0 10px var(--color-primary); }
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg-dark);
+  color: var(--color-text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+#game-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  max-height: 800px;
+  background: var(--color-bg-medium);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.1);
+}
+
+#gameCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+}
+
+#ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+#ui-overlay > * {
+  pointer-events: auto;
+}
+
+#hud {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  right: var(--space-md);
+  display: flex;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+#score-display,
+#highscore-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+#score-display .label,
+#highscore-display .label {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  letter-spacing: 2px;
+}
+
+#current-score,
+#high-score {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-shadow: var(--glow-primary);
+}
+#high-score {
+  color: var(--color-warning);
+  text-shadow: 0 0 10px var(--color-warning);
+}
+
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  animation: fadeIn 0.3s ease;
+}
+.screen.hidden {
+  display: none;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.screen-content {
+  text-align: center;
+  padding: var(--space-lg);
+  max-width: 500px;
+}
+
+.game-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 900;
+  color: var(--color-text);
+  letter-spacing: 4px;
+  margin-bottom: var(--space-sm);
+  text-shadow: var(--glow-primary);
+  animation: titlePulse 2s ease-in-out infinite;
+}
+.game-title .accent {
+  color: var(--color-primary);
+  animation: flicker 3s infinite;
+}
+@keyframes titlePulse {
+  0%,
+  100% {
+    text-shadow: var(--glow-primary);
+  }
+  50% {
+    text-shadow:
+      0 0 20px var(--color-primary),
+      0 0 40px var(--color-primary);
+  }
+}
+
+@keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; text-shadow: var(--glow-primary); }
+    20%, 24%, 55% { opacity: 0.5; text-shadow: none; }
+}
+
+.tagline {
+  font-size: 1.2rem;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xl);
+  letter-spacing: 3px;
+}
+
+.screen-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 4px;
+  margin-bottom: var(--space-lg);
+  text-shadow: var(--glow-primary);
+}
+.screen-title.gameover {
+  color: var(--color-secondary);
+}
+
+.controls-info {
+  margin-bottom: var(--space-xl);
+}
+.control-item {
+  padding: var(--space-sm) 0;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+}
+.control-item .key {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid var(--color-primary);
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  margin: 0 var(--space-xs);
+}
+.mobile-only {
+  display: none;
+}
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+}
+
+.neon-btn {
+  padding: var(--space-md) var(--space-xl);
+  margin: var(--space-sm);
+  background: transparent;
+  border: 2px solid var(--color-primary);
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: neonPulse 2s infinite;
+}
+.neon-btn:hover {
+  background: rgba(0, 240, 255, 0.1);
+  box-shadow: var(--glow-primary);
+  transform: translateY(-2px);
+}
+.neon-btn.secondary {
+  border-color: var(--color-text-muted);
+  color: var(--color-text-muted);
+}
+
+.pause-score .label,
+.score-box .label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xs);
+}
+#pause-current-score {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.final-scores {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+.score-box {
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.score-box .label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+}
+#final-score,
+#final-high-score {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+}
+#final-score {
+  color: var(--color-primary);
+}
+#final-high-score {
+  color: var(--color-warning);
+}
+.score-box.highlight {
+  border-color: var(--color-warning);
+}
+
+#new-record {
+  margin-bottom: var(--space-md);
+}
+.new-record-text {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--color-success);
+  animation: pulse 0.5s ease infinite alternate;
+}
+@keyframes pulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.05);
+  }
+}
+
+.pause-button {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 44px;
+  height: 44px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 50;
+}
+.pause-button:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.touch-area {
+  position: absolute;
+  bottom: 0;
+  height: 50%;
+  pointer-events: auto;
+}
+#touch-area-jump {
+  left: 0;
+  width: 70%;
+}
+#touch-area-slide {
+  right: 0;
+  width: 30%;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  #game-container {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+  #current-score,
+  #high-score {
+    font-size: 1.4rem;
+  }
+  .final-scores {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  .neon-btn {
+    display: block;
+    width: 100%;
+    margin: var(--space-sm) 0;
+  }
+}

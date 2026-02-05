@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="A fast-paced 2D endless runner game built with HTML5 Canvas"
+    />
+    <title>Neon Runner - Endless Runner Game</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="game-container">
+      <!-- Main Canvas -->
+      <canvas id="gameCanvas"></canvas>
+
+      <!-- UI Overlay -->
+      <div id="ui-overlay">
+        <!-- HUD (visible during gameplay) -->
+        <div id="hud" class="hidden">
+          <div id="score-display">
+            <span class="label">SCORE</span>
+            <span id="current-score">0</span>
+          </div>
+          <div id="highscore-display">
+            <span class="label">BEST</span>
+            <span id="high-score">0</span>
+          </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+          <div class="screen-content">
+            <h1 class="game-title">NEON<span class="accent">RUNNER</span></h1>
+            <p class="tagline">Run. Jump. Survive.</p>
+            <div class="controls-info">
+              <div class="control-item">
+                <span class="key">SPACE</span> or <span class="key">↑</span> to
+                Jump
+              </div>
+              <div class="control-item">
+                <span class="key">↓</span> to Slide
+              </div>
+              <div class="control-item mobile-only">
+                <span class="key">TAP</span> Jump ·
+                <span class="key">SWIPE ↓</span> Slide
+              </div>
+            </div>
+            <button id="start-btn" class="neon-btn">
+              <span>START GAME</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="screen hidden">
+          <div class="screen-content">
+            <h2 class="screen-title">PAUSED</h2>
+            <div class="pause-score">
+              <span class="label">Current Score</span>
+              <span id="pause-current-score">0</span>
+            </div>
+            <button id="resume-btn" class="neon-btn">
+              <span>RESUME</span>
+            </button>
+            <button id="restart-from-pause-btn" class="neon-btn secondary">
+              <span>RESTART</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+          <div class="screen-content">
+            <h2 class="screen-title gameover">GAME OVER</h2>
+            <div class="final-scores">
+              <div class="score-box">
+                <span class="label">SCORE</span>
+                <span id="final-score">0</span>
+              </div>
+              <div class="score-box highlight">
+                <span class="label">BEST</span>
+                <span id="final-high-score">0</span>
+              </div>
+            </div>
+            <div id="new-record" class="hidden">
+              <span class="new-record-text">🎉 NEW RECORD! 🎉</span>
+            </div>
+            <button id="restart-btn" class="neon-btn">
+              <span>PLAY AGAIN</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pause Button (visible during gameplay) -->
+      <button id="pause-btn" class="pause-button hidden">❚❚</button>
+
+      <!-- Mobile Touch Areas -->
+      <div id="touch-area-jump" class="touch-area hidden"></div>
+      <div id="touch-area-slide" class="touch-area hidden"></div>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
