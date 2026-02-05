@@ -1509,10 +1509,11 @@ class Game {
     this.ui.showScreen("playing");
     
     // Start Music
-    if (window.ytPlayer && window.ytPlayer.playVideo && window.ytPlayer.seekTo) {
-        window.ytPlayer.seekTo(20); // Start from 20 seconds
-        window.ytPlayer.playVideo();
-        window.ytPlayer.setVolume(50); // Set to moderate volume
+    const music = document.getElementById("bg-music");
+    if (music) {
+        music.currentTime = 20; // Start from 20 seconds
+        music.volume = 0.5;
+        music.play().catch(e => console.log("Music play blocked", e));
     }
   }
 
@@ -1531,9 +1532,10 @@ class Game {
     }
     
     // Music Pause/Play
-    if (window.ytPlayer && window.ytPlayer.pauseVideo) {
-        if (this.state === GameState.PAUSED) window.ytPlayer.pauseVideo();
-        else if (this.state === GameState.PLAYING) window.ytPlayer.playVideo();
+    const music = document.getElementById("bg-music");
+    if (music) {
+        if (this.state === GameState.PAUSED) music.pause();
+        else if (this.state === GameState.PLAYING) music.play().catch(e => {});
     }
   }
 
@@ -1557,8 +1559,9 @@ class Game {
     }
     
     // Stop music on game over
-    if (window.ytPlayer && window.ytPlayer.pauseVideo) {
-        window.ytPlayer.pauseVideo();
+    const music = document.getElementById("bg-music");
+    if (music) {
+        music.pause();
     }
 
     this.ui.showGameOver(this.score, this.highScore, isNewRecord);
@@ -1677,33 +1680,6 @@ class Game {
 }
 
 // ============================================
-// INITIALIZE GAME
-// ============================================
 document.addEventListener("DOMContentLoaded", () => {
   window.game = new Game();
 });
-
-// ============================================
-// YOUTUBE MUSIC CONTROLLER
-// ============================================
-window.onYouTubeIframeAPIReady = function() {
-    window.ytPlayer = new YT.Player('music-player', {
-        height: '0',
-        width: '0',
-        videoId: 'ajGrkFL92rk', // The ID from your link
-        playerVars: {
-            'autoplay': 0,
-            'controls': 0,
-            'loop': 1,
-            'playlist': 'ajGrkFL92rk', // Required for looping
-            'start': 20, // Start time in seconds
-            'enablejsapi': 1,
-            'origin': window.location.origin
-        },
-        events: {
-            'onReady': (event) => {
-                console.log("Music Player Ready");
-            }
-        }
-    });
-};
