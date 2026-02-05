@@ -29,7 +29,7 @@ const CONFIG = {
   // Obstacles
   MIN_OBSTACLE_GAP: 500, // Increased gap
   MAX_OBSTACLE_GAP: 900, // Increased gap
-  OBSTACLE_TYPES: ["ground", "air", "double"],
+  OBSTACLE_TYPES: ["ground", "air", "double", "tall", "long"],
 
   // Scoring
   SCORE_MULTIPLIER: 0.1,
@@ -94,6 +94,7 @@ const Utils = {
 // ============================================
 const Storage = {
   KEY: "neonrunner_highscore",
+  LB_KEY: "neonrunner_leaderboard",
 
   getHighScore: () => {
     try {
@@ -108,6 +109,29 @@ const Storage = {
       localStorage.setItem(Storage.KEY, score.toString());
     } catch (e) {
       console.warn("Could not save high score");
+    }
+  },
+
+  getLeaderboard: () => {
+    try {
+      const lb = localStorage.getItem(Storage.LB_KEY);
+      return lb ? JSON.parse(lb) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  saveToLeaderboard: (score) => {
+    try {
+      let lb = Storage.getLeaderboard();
+      lb.push({ score: Math.floor(score), date: new Date().toLocaleDateString() });
+      lb.sort((a, b) => b.score - a.score);
+      lb = lb.slice(0, 5); // Keep top 5
+      localStorage.setItem(Storage.LB_KEY, JSON.stringify(lb));
+      return lb;
+    } catch (e) {
+      console.warn("Could not save to leaderboard");
+      return [];
     }
   },
 };
@@ -836,6 +860,18 @@ class Obstacle {
         this.airY = groundY - 120;
         this.airHeight = 25;
         break;
+      case "tall":
+        // Requires sliding
+        this.width = 60;
+        this.height = 130;
+        this.y = groundY - this.height;
+        break;
+      case "long":
+        // Longer ground obstacle
+        this.width = 150;
+        this.height = 40;
+        this.y = groundY - this.height;
+        break;
     }
   }
 
@@ -885,6 +921,22 @@ class Obstacle {
 
       // Air obstacle
       ctx.fillRect(this.x - 10, this.airY, this.width + 20, this.airHeight);
+    } else if (this.type === "tall") {
+        // High block - must slide under
+        ctx.fillRect(this.x, this.y, this.width, this.height - 40);
+        ctx.fillStyle = "#ffcc00";
+        ctx.fillRect(this.x, this.y + this.height - 45, this.width, 5);
+    } else if (this.type === "long") {
+        // Wide spike pit / long barrier
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.fillStyle = "#ff3300";
+        for (let i=0; i<this.width; i+=30) {
+            ctx.beginPath();
+            ctx.moveTo(this.x + i, this.y);
+            ctx.lineTo(this.x + i + 15, this.y - 15);
+            ctx.lineTo(this.x + i + 30, this.y);
+            ctx.fill();
+        }
     }
 
     ctx.restore();
@@ -909,6 +961,13 @@ class Obstacle {
         width: this.width + 20 - padding * 2,
         height: this.airHeight - padding * 2,
       });
+    } else if (this.type === "tall") {
+        boxes.push({
+            x: this.x + padding,
+            y: this.y + padding,
+            width: this.width - padding * 2,
+            height: this.height - 40, // Gap for sliding
+        });
     } else {
       boxes.push({
         x: this.x + padding,
@@ -1055,7 +1114,7 @@ class ObstacleManager {
     // Spawn new obstacles
     this.nextObstacleX -= gameSpeed;
     if (this.nextObstacleX <= this.canvasWidth) {
-      this.spawnObstacle();
+      this.spawnObstacle(level);
     }
 
     // Random power-up spawn
@@ -1067,19 +1126,31 @@ class ObstacleManager {
     }
   }
 
-  spawnObstacle() {
-    // Select obstacle type based on difficulty
+  spawnObstacle(level) {
     let type;
     const rand = Math.random();
-    // Easier logic: Mostly ground obstacles
-    if (this.difficulty < 2) { 
+    
+    // Progressive complexity based on level
+    if (level === 1) {
       type = "ground";
-    } else if (rand < 0.6) {
-      type = "ground";
-    } else if (rand < 0.9) {
-      type = "air"; // Less air
+    } else if (level === 2) {
+      type = rand < 0.7 ? "ground" : "air";
+    } else if (level === 3) {
+      if (rand < 0.5) type = "ground";
+      else if (rand < 0.8) type = "air";
+      else type = "double";
+    } else if (level === 4) {
+      if (rand < 0.4) type = "ground";
+      else if (rand < 0.7) type = "air";
+      else if (rand < 0.85) type = "double";
+      else type = "tall";
     } else {
-      type = "double"; // Very rare double
+      // Level 5+ uses all types
+      if (rand < 0.3) type = "ground";
+      else if (rand < 0.5) type = "air";
+      else if (rand < 0.7) type = "double";
+      else if (rand < 0.85) type = "tall";
+      else type = "long";
     }
 
     this.obstacles.push(
@@ -1339,6 +1410,18 @@ class UIManager {
     this.levelDisplay.style.transition = 'opacity 0.5s';
     this.levelDisplay.innerText = 'LEVEL 1';
     document.getElementById('game-container').appendChild(this.levelDisplay);
+
+    this.leaderboardEl = document.getElementById("leaderboard-list");
+  }
+
+  renderLeaderboard(data) {
+    if (!this.leaderboardEl) return;
+    this.leaderboardEl.innerHTML = data.map((item, index) => `
+        <li class="leaderboard-item">
+            <span class="leaderboard-rank">#${index + 1}</span>
+            <span class="leaderboard-score">${item.score}</span>
+        </li>
+    `).join('');
   }
 
   showScreen(screenName) {
@@ -1387,7 +1470,7 @@ class UIManager {
     }, 500);
   }
 
-  showGameOver(score, highScore, isNewRecord, canRevive) {
+  showGameOver(score, highScore, isNewRecord, canRevive, leaderboardData) {
     this.finalScoreEl.textContent = Math.floor(score);
     this.finalHighScoreEl.textContent = Math.floor(highScore);
 
@@ -1401,6 +1484,10 @@ class UIManager {
       this.reviveBtn.classList.remove("hidden");
     } else {
       this.reviveBtn.classList.add("hidden");
+    }
+
+    if (leaderboardData) {
+      this.renderLeaderboard(leaderboardData);
     }
 
     this.showScreen("gameover");
@@ -1576,8 +1663,11 @@ class Game {
         music.pause();
     }
 
+    // Save to leaderboard
+    const lbData = Storage.saveToLeaderboard(this.score);
+
     const canRevive = this.score >= 5000 && !this.revivalUsed;
-    this.ui.showGameOver(this.score, this.highScore, isNewRecord, canRevive);
+    this.ui.showGameOver(this.score, this.highScore, isNewRecord, canRevive, lbData);
   }
 
   revivePlayer() {
