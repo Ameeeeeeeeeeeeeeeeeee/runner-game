@@ -918,14 +918,15 @@ class ObstacleManager {
     // Select obstacle type based on difficulty
     let type;
     const rand = Math.random();
-    if (this.difficulty < 1.2) {
+    // Easier logic: Mostly ground obstacles
+    if (this.difficulty < 2) { 
       type = "ground";
-    } else if (rand < 0.5) {
+    } else if (rand < 0.6) {
       type = "ground";
-    } else if (rand < 0.8) {
-      type = "air";
+    } else if (rand < 0.9) {
+      type = "air"; // Less air
     } else {
-      type = "double";
+      type = "double"; // Very rare double
     }
 
     this.obstacles.push(
@@ -1367,7 +1368,7 @@ class Game {
     if (this.score >= this.nextLevelScore && this.level < CONFIG.MAX_LEVEL) {
         this.level++;
         this.nextLevelScore += CONFIG.LEVEL_DURATION;
-        this.gameSpeed += CONFIG.SPEED_INCREMENT_PER_LEVEL;
+        // this.gameSpeed += CONFIG.SPEED_INCREMENT_PER_LEVEL; // Disabled speed increase
         this.sound.playLevelUp();
         this.ui.showLevelUp(this.level);
         
@@ -1378,10 +1379,11 @@ class Game {
             CONFIG.COLORS.levelText, 
             50
         );
-    } else if (this.gameSpeed < CONFIG.MAX_SPEED + (this.level * 0.5)) {
-        // Minor gradual increase within level
-        this.gameSpeed += CONFIG.SPEED_INCREMENT * deltaTime;
-    }
+    } 
+    // else if (this.gameSpeed < CONFIG.MAX_SPEED + (this.level * 0.5)) {
+    //    // Minor gradual increase within level
+    //    this.gameSpeed += CONFIG.SPEED_INCREMENT * deltaTime;
+    // }
 
     // Update game objects
     this.background.update(this.gameSpeed);
