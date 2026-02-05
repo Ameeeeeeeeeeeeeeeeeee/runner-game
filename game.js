@@ -509,7 +509,7 @@ class SoundManager {
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.value = 0.3; // Lower volume
         this.masterGain.connect(this.ctx.destination);
-        this.enabled = true;
+        this.enabled = false; // Game sounds disabled to prioritize background music
     }
 
     resume() {
