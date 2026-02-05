@@ -20,8 +20,10 @@ const CONFIG = {
   PLAYER_X_POSITION: 100,
 
   // Game Speed
+  // Game Speed
   INITIAL_SPEED: 6,
-  MAX_SPEED: 18,
+  SPEEDS: { SLOW: 5, MEDIUM: 8, FAST: 12 },
+  MAX_SPEED: 25, // Increased max speed
   SPEED_INCREMENT: 0.001,
 
   // Obstacles
@@ -1264,8 +1266,15 @@ class Game {
 
   setupUIListeners() {
     document
-      .getElementById("start-btn")
-      .addEventListener("click", () => this.startGame());
+      .getElementById("start-slow-btn")
+      .addEventListener("click", () => this.startGame(CONFIG.SPEEDS.SLOW));
+    document
+      .getElementById("start-medium-btn")
+      .addEventListener("click", () => this.startGame(CONFIG.SPEEDS.MEDIUM));
+    document
+      .getElementById("start-fast-btn")
+      .addEventListener("click", () => this.startGame(CONFIG.SPEEDS.FAST));
+
     document
       .getElementById("resume-btn")
       .addEventListener("click", () => this.togglePause());
@@ -1280,13 +1289,13 @@ class Game {
       .addEventListener("click", () => this.togglePause());
   }
 
-  startGame() {
+  startGame(speed) {
     this.sound.resume(); // Ensure audio context is unlocked
     this.state = GameState.PLAYING;
     this.score = 0;
     this.level = 1;
     this.nextLevelScore = CONFIG.LEVEL_DURATION;
-    this.gameSpeed = CONFIG.INITIAL_SPEED;
+    this.gameSpeed = speed || CONFIG.INITIAL_SPEED;
     this.player.reset(this);
     this.player.groundY = this.groundY;
     this.obstacleManager.reset();
