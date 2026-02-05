@@ -368,6 +368,12 @@ class SoundManager {
         this.enabled = true;
     }
 
+    resume() {
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
     playTone(freq, type, duration, startTime = 0) {
         if (!this.enabled) return;
         
@@ -1275,6 +1281,7 @@ class Game {
   }
 
   startGame() {
+    this.sound.resume(); // Ensure audio context is unlocked
     this.state = GameState.PLAYING;
     this.score = 0;
     this.level = 1;

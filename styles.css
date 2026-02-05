@@ -347,18 +347,20 @@ body {
 }
 
 .touch-area {
+  display: none;
   position: absolute;
   bottom: 0;
   height: 50%;
   pointer-events: auto;
+  z-index: 20;
 }
 #touch-area-jump {
   left: 0;
-  width: 70%;
+  width: 50%; /* Changed to 50% for better balance */
 }
 #touch-area-slide {
   right: 0;
-  width: 30%;
+  width: 50%; /* Changed to 50% for better balance */
 }
 
 .hidden {
@@ -366,6 +368,9 @@ body {
 }
 
 @media (max-width: 768px) {
+  .touch-area {
+    display: block;
+  }
   #game-container {
     max-width: 100%;
     max-height: 100%;
