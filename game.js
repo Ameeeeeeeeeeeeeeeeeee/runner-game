@@ -180,10 +180,19 @@ class ParallaxLayer {
     this.color = color;
     this.height = height;
     this.yOffset = yOffset;
-    this.pattern = pattern; // 'buildings', 'mountains', 'stars', 'grid'
+    this.pattern = pattern; // 'buildings', 'mountains', 'stars', 'grid', 'image'
     this.offset = 0;
     this.elements = [];
     this.initialized = false;
+    
+    if (this.pattern === 'image') {
+        this.image = new Image();
+        this.image.src = "background.png"; // User provided image
+        this.imageLoaded = false;
+        this.image.onload = () => {
+            this.imageLoaded = true;
+        };
+    }
   }
 
   init(canvasWidth, canvasHeight) {
@@ -338,6 +347,28 @@ class ParallaxLayer {
             });
         }
       });
+    } else if (this.pattern === "image") {
+        if (this.imageLoaded) {
+            // Draw image repeating
+            const aspect = this.image.width / this.image.height;
+            const drawHeight = canvasHeight; // Full height
+            const drawWidth = drawHeight * aspect;
+            
+            let x = -this.offset % drawWidth;
+            if (x > 0) x -= drawWidth;
+            
+            while (x < canvasWidth) {
+                // Dim the image slightly for background feel
+                ctx.globalAlpha = 0.6;
+                ctx.drawImage(this.image, x, 0, drawWidth, drawHeight);
+                x += drawWidth;
+            }
+            ctx.globalAlpha = 1;
+        } else {
+             // Fallback while loading (or if missing) - simplified mountains
+             ctx.fillStyle = "#1a1a2e";
+             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
     } else if (this.pattern === "grid") {
       // Neon grid floor
       ctx.strokeStyle = CONFIG.COLORS.groundLine;
@@ -371,10 +402,9 @@ class ParallaxLayer {
 class Background {
   constructor() {
     this.layers = [
-      new ParallaxLayer(0.1, "transparent", 0, 0, "stars"),
-      new ParallaxLayer(0.2, "#2a2a15", 250, 0, "mountains"), // Higher, brownish mountains (Entoto)
-      new ParallaxLayer(0.4, "#0f0f20", 200, 0, "addis"), // Addis pattern
-      new ParallaxLayer(1, "transparent", 0, 0, "grid"),
+      // Image background replaces stars/mountains/buildings for a cleaner photo look
+       new ParallaxLayer(0.2, "transparent", 0, 0, "image"),
+       new ParallaxLayer(1, "transparent", 0, 0, "grid"),
     ];
   }
 
