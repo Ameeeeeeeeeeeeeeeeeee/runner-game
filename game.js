@@ -27,8 +27,8 @@ const CONFIG = {
   SPEED_INCREMENT: 0.001,
 
   // Obstacles
-  MIN_OBSTACLE_GAP: 300,
-  MAX_OBSTACLE_GAP: 600,
+  MIN_OBSTACLE_GAP: 500, // Increased gap
+  MAX_OBSTACLE_GAP: 900, // Increased gap
   OBSTACLE_TYPES: ["ground", "air", "double"],
 
   // Scoring
