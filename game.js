@@ -1021,6 +1021,7 @@ class ObstacleManager {
     this.canvasWidth = canvasWidth;
     this.obstacles = [];
     this.powerUps = [];
+    this.coins = [];
     this.nextObstacleX = canvasWidth + 200;
     this.difficulty = 1;
   }
